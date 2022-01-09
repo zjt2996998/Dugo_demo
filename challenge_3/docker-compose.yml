@@ -1,0 +1,41 @@
+version: "3"
+
+services:
+  db:
+    image: mongo
+    restart: unless-stopped
+    env_file: 
+     - .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$MONGODB_USER
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGODB_PASSWORD
+    ports:
+      - $MONGODB_PORT:$MONGODB_PORT
+    networks:
+      - node-webapp-network
+    volumes:
+      - db:/data/db
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+      context: .
+    restart: always
+    links:
+      - db
+    environment:
+      WAIT_HOSTS: db:27017
+    env_file: 
+     - .env
+    ports:
+      - $NODE_PORT:$NODE_PORT
+    networks:
+      - node-webapp-network
+    volumes:
+      - ./src:/app/src
+    depends_on:
+      - db
+networks:
+  node-webapp-network:
+    driver: bridge
+volumes:
+  db:
